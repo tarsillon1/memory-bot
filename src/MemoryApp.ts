@@ -10,10 +10,8 @@ dotenv.config();
 
 export class Route {
   constructor(
-    readonly base: string,
-    readonly mapping: string,
     readonly action: (...args) => any,
-    readonly options: { header?: string[]; query?: string[]; body?: string[] }
+    readonly options: { mapping : string, base : string, method : "POST" | "GET"; header?: string[]; query?: string[]; body?: string[] }
   ) {}
 }
 
@@ -78,7 +76,7 @@ export class MemoryApp {
     action: (...args) => any,
     options: { header?: string[]; query?: string[]; body?: string[] }
   ) {
-    return async (req, res, next) => {
+    return async (req, res) => {
       let params = [];
       if (options.header)
         options.header.forEach(param => params.push(req.header[param]));
@@ -87,7 +85,7 @@ export class MemoryApp {
       if (options.body)
         options.body.forEach(param => params.push(req.body[param]));
 
-      let data = await Promise.resolve(action(...params));
+      let data : Promise<any> = await Promise.resolve(action(...params));
 
       res.status(200).send(data);
     };
@@ -108,8 +106,8 @@ export class MemoryApp {
 
   private addController(controller: Controller) {
     let addRoute = (route: Route) => {
-      this.app.use(
-        path.resolve(route.base, route.mapping),
+      this.app[route.options.method.toLowerCase()](
+        route.options.base + route.options.mapping,
         MemoryApp.extract(route.action, route.options)
       );
     };

@@ -34,9 +34,13 @@ export default class TestController implements Controller {
 
   getRoutes(): Route[] {
     return [
-      new Route("/test", "symphony/messages", this.symphonyMessages, {
-        body: ["count", "email", "message"]
-      })
+        new Route(this.symphonyMessages,
+            {
+                base: "/test",
+                mapping: "/symphony/messages",
+                method: "POST",
+                body: ["count", "email", "message"]
+            })
     ];
   }
 }
