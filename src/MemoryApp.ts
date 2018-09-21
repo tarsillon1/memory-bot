@@ -5,6 +5,7 @@ import * as express from "express";
 import MemoryLogger from "./util/MemoryLogger";
 import * as http from "http";
 import TestController from "./routes/TestController";
+import {promisify} from "util";
 
 dotenv.config();
 
@@ -63,7 +64,15 @@ export class MemoryApp {
       }
     };
 
-    setInterval(memoryLog, 1000);
+      (async () => {
+          while (true) {
+              let time = Date.now();
+              await memoryLog();
+
+              time = Date.now() - time;
+              if (time < 1000) await promisify(setTimeout)(1000 - time);
+          }
+      })();
   }
 
   public static memoryEvent(event: string) {
