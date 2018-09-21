@@ -15,4 +15,15 @@ export default class MemoryLogger {
 
     return stdout;
   }
+
+  static async logUnix(name) : Promise<string> {
+      const { stdout } = await this.exec(
+          `sh ${path.resolve(
+              __dirname,
+              "../../scripts/get-process.sh"
+          )} ${name}`
+      ).catch(console.log) as { stdout };
+
+      return stdout;
+  }
 }

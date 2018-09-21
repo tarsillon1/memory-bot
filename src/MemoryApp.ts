@@ -45,12 +45,15 @@ export class MemoryApp {
 
     let memoryLog = async () => {
       for (let name of MemoryApp.processNames) {
+        let data = null;
         switch (platform.toUpperCase()) {
           case "WIN32":
-            let data = await MemoryLogger.logWindows(name);
+            data = await MemoryLogger.logWindows(name);
             saveData(name, data);
             break;
           case "DARWIN":
+            data = await MemoryLogger.logUnix(name);
+            saveData(name, data);
             //TO-DO
             break;
           case "LINUX":
