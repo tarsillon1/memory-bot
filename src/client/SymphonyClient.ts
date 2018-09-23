@@ -45,15 +45,18 @@ export default class SymphonyClient {
     const form: FormData = new FormData();
     form.append("message", message);
 
-    let { data } = await this.agent
-      .post(`/v4/stream/${sid}/message/create`, form, {
+    let { data } = await this.agent.post(
+      `/v4/stream/${sid}/message/create`,
+      form,
+      {
         headers: Object.assign(
           {
             "content-type": `multipart/form-data; boundary=${form._boundary}`
           },
           this.agent.defaults.headers
         )
-      });
+      }
+    );
 
     return data;
   }

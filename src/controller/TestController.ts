@@ -1,13 +1,17 @@
-import { Controller, HttpError, MemoryApp, Route } from "../MemoryApp";
 import SymphonyClient from "../client/SymphonyClient";
+import MemoryLogger from "../util/MemoryLogger";
+import { BodyParam, Controller, Method, Post } from "../model/AppDecorator";
+import { HttpError } from "../App";
 
-export default class TestController implements Controller {
-  private async symphonyMessages(
-    count: number,
-    email: string,
-    message: string
+@Controller("/test")
+export default class TestController {
+  @Post("/symphony/messages")
+  public async symphonyMessages(
+    @BodyParam("count") count: number,
+    @BodyParam("email") email: string,
+    @BodyParam("message") message: string
   ) {
-    MemoryApp.memoryEvent("Symphony Messages");
+    MemoryLogger.memoryEvent("Symphony Messages");
 
     let client = new SymphonyClient();
     await client.authenticate();
@@ -30,17 +34,5 @@ export default class TestController implements Controller {
     }
 
     return { message: "Load test began." };
-  }
-
-  getRoutes(): Route[] {
-    return [
-        new Route(this.symphonyMessages,
-            {
-                base: "/test",
-                mapping: "/symphony/messages",
-                method: "POST",
-                body: ["count", "email", "message"]
-            })
-    ];
   }
 }

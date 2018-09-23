@@ -2,8 +2,9 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "build",
-    "target": "es2017",
-    "removeComments": true
+    "target": "ES6",
+    "removeComments": true,
+    "experimentalDecorators": true
   },
   "include": [
     "./src/**/*.ts"
