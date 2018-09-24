@@ -26,7 +26,11 @@ export default class MemoryLogger {
         : "[";
       fs.writeFileSync(
         `${name}.out`,
-        `${original}${original === "[" ? "" : ","}\n${JSON.stringify(log, null, 4)}]`,
+        `${original}${original === "[" ? "" : ","}\n${JSON.stringify(
+          log,
+          null,
+          4
+        )}]`,
         "utf-8"
       );
     };
