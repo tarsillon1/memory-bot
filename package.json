@@ -3,7 +3,7 @@
   "version": "8.0.0",
   "scripts": {
     "start": "npm run build && node build/App.js",
-    "build": " tsc"
+    "build": "rm -rf build && tsc"
   },
   "dependencies": {
     "axios": "^0.18.0",
