@@ -24,6 +24,7 @@ export default class MemoryLogger {
   public static initialize() {
     dotenv.config();
     this.processNames = JSON.parse(process.env.PROCESS_NAMES);
+    this.aggregatorClient = new AggregatorClient();
 
     let platform = process.platform;
     console.log(`This platform is ${platform}.`);
