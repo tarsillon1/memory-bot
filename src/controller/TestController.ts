@@ -11,7 +11,7 @@ export default class TestController {
     @BodyParam("email") email: string,
     @BodyParam("message") message: string
   ) {
-    MemoryLogger.memoryEvent("Symphony Messages");
+    MemoryLogger.metricEvent("Symphony Messages");
 
     let client = new SymphonyClient();
     await client.authenticate();

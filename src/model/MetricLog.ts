@@ -8,6 +8,7 @@ export class MetricLog {
    * @param {string} metricName the name of the metric.
    * @param {number} metricValue the value of the metric.
    * @param {MetricLog[]} logTree sub log metrics that this metric was based on.
+   * @param events an event that happened between this log and the last log.
    */
   constructor(
     readonly processName: string,
@@ -15,6 +16,7 @@ export class MetricLog {
     readonly logStreamId: string,
     readonly metricName: string,
     readonly metricValue: number,
-    readonly logTree: MetricLog[] = []
+    readonly logTree: MetricLog[] = [],
+    readonly events: string[] = []
   ) {}
 }

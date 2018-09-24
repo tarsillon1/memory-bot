@@ -14,4 +14,5 @@ trees. It has built in integration for comparing memory consumption of different
 
 The log files generated will log out the memory consumption of the named process every second.
 Upon triggering a load test via REST request, a event will be appended to the log signifying the start of
-the event. Events follow the naming convention `< EVENT >`.
+the event. With the aggregator configured, metric logs will be sent for aggregator collection, so dashboard can be built
+based on the data.

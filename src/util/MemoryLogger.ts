@@ -17,6 +17,7 @@ export default class MemoryLogger {
   private static readonly CACHE_CAPACITY = 60;
 
   private static processNames: string[];
+  private static metricEvents: string[] = [];
   private static aggregatorClient: AggregatorClient;
   private static logCache: MetricLog[] = [];
 
@@ -64,6 +65,8 @@ export default class MemoryLogger {
           await this.aggregatorClient.sendMetricLogs(this.logCache);
           this.logCache = [];
         }
+
+        this.metricEvents = [];
       }
     };
 
@@ -79,13 +82,8 @@ export default class MemoryLogger {
     })();
   }
 
-  public static memoryEvent(event: string) {
-    this.processNames.forEach(name => {
-      let original = fs.existsSync(`${name}.out`)
-        ? fs.readFileSync(`${name}.out`, "utf-8")
-        : "";
-      fs.writeFileSync(`${name}.out`, `${original}< ${event} >`, "utf-8");
-    });
+  public static metricEvent(event: string) {
+    this.metricEvents.push(event);
   }
 
   private static async logWindows(name): Promise<MetricLog> {
@@ -132,7 +130,8 @@ export default class MemoryLogger {
       this.LOG_STREAM_ID,
       "Total Private Working Set",
       totalPrivateWorkingSet,
-      logTree
+      logTree,
+      this.metricEvents
     );
   }
 
@@ -196,7 +195,8 @@ export default class MemoryLogger {
       this.LOG_STREAM_ID,
       "Total Private Working Set",
       totalPrivateWorkingSet,
-      logTree
+      logTree,
+      this.metricEvents
     );
   }
 }
