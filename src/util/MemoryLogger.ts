@@ -112,7 +112,7 @@ export default class MemoryLogger {
           stdout.indexOf("\n") !== -1 ? stdout.indexOf("\n") : stdout.length
         )
       );
-      totalPrivateWorkingSet += privateWorkingSet;
+      totalPrivateWorkingSet += privateWorkingSet ? privateWorkingSet : 0;
 
       logTree.push(
         new MetricLog(
@@ -173,9 +173,12 @@ export default class MemoryLogger {
             return value;
         }
       };
-      let privateWorkingSet: number = convert();
+      let converted = convert();
+      let privateWorkingSet: number = converted ? converted : 0;
       stdout = stdout.substring(stdout.indexOf(" ")).trim();
-      privateWorkingSet += convert();
+
+      converted = convert();
+      privateWorkingSet += converted ? converted : 0;
 
       totalPrivateWorkingSet += privateWorkingSet;
 
