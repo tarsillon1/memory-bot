@@ -76,14 +76,38 @@ export default class MemoryLogger {
   }
 
   private static async logWindows(name): Promise<MemoryLog> {
-    const { stdout } = (await this.exec(
-      `powershell.exe -ExecutionPolicy ByPass -file ${path.resolve(
-        __dirname,
-        "../../scripts/get-process.ps1"
-      )} -processName ${name}`
-    ).catch(console.log)) as { stdout };
+    let { stdout } = await this.exec(
+          `powershell.exe -ExecutionPolicy ByPass -file ${path.resolve(
+              __dirname,
+              "../../scripts/get-process.ps1"
+          )} -processName ${name}`
+      );
 
-    return stdout;
+      let getNext = () => {
+          let index = stdout.toLowerCase().indexOf(name.toLowerCase());
+          stdout = index !== -1 ? stdout.substring(index) : "";
+          return stdout;
+      };
+      let totalPrivateWorkingSet = 0;
+      let processTree: MemoryLog.Process[] = [];
+      while (getNext()) {
+          let name = stdout.substring(0, stdout.indexOf(" ")).trim();
+          stdout = stdout.substring(stdout.indexOf(" ")).trim();
+
+          let privateWorkingSet: number = Number.parseInt(stdout.substring(0,
+              stdout.indexOf("\n") !== -1 ? stdout.indexOf("\n") : stdout.length));
+          totalPrivateWorkingSet += privateWorkingSet;
+
+          processTree.push(new MemoryLog.Process(name, privateWorkingSet));
+      }
+
+      return new MemoryLog(
+          name,
+          "Windows",
+          this.LOG_STREAM_ID,
+          totalPrivateWorkingSet,
+          processTree
+      );
   }
 
   private static async logUnix(name): Promise<MemoryLog> {
