@@ -62,6 +62,6 @@ export default class RobotSteps {
       return screenSize * Number.parseInt(val.substr(0, val.length - 1)) * 0.01;
     }
 
-    return Number.parseInt(val);
+    return Number.parseFloat(val);
   }
 }

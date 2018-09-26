@@ -3,7 +3,7 @@
   "version": "8.0.0",
   "scripts": {
     "start": "npm run build && node build/Main.js",
-    "build": "rm -rf build && tsc"
+    "build": "tsc"
   },
   "dependencies": {
     "@types/reflect-metadata": "^0.1.0",

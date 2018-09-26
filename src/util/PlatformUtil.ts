@@ -8,6 +8,10 @@ export default class PlatformUtil {
   public static async focusApplication(application: string): Promise<void> {
     switch (this.getPlatform()) {
       case "WIN32":
+        await this.execute(`powershell.exe -ExecutionPolicy ByPass -file ${path.resolve(
+            __dirname,
+            "../../scripts/focus.ps1"
+        )} -processName ${this.windowsApplicationName(application)}`);
         break;
       case "DARWIN":
         await this.execute(`open -a ${application}`);
@@ -20,6 +24,7 @@ export default class PlatformUtil {
   public static async executeApplication(application: string): Promise<void> {
     switch (this.getPlatform()) {
       case "WIN32":
+        await this.execute(`powershell.exe Start-Process -FilePath "${application}"`);
         break;
       case "DARWIN":
         await this.execute(`open -a ${application}`);
@@ -32,6 +37,10 @@ export default class PlatformUtil {
   public static async fullScreenApplication(application: string) {
     switch (this.getPlatform()) {
       case "WIN32":
+          await this.execute(`powershell.exe -ExecutionPolicy ByPass -file ${path.resolve(
+              __dirname,
+              "../../scripts/full-screen.ps1"
+          )} -processName ${this.windowsApplicationName(application)}`);
         break;
       case "DARWIN":
         await this.execute(
@@ -52,5 +61,9 @@ export default class PlatformUtil {
 
   public static getPlatform(): "WIN32" | "DARWIN" | "LINUX" {
     return process.platform.toUpperCase() as "WIN32" | "DARWIN" | "LINUX";
+  }
+
+  public static windowsApplicationName(application : string) {
+    return application.substring(application.lastIndexOf("\\")  + 1, application.indexOf("."));
   }
 }
