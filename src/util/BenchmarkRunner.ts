@@ -57,31 +57,31 @@ export default class BenchmarkRunner {
    * Run the steps.
    * @param context {{steps: object[]}} the step context.
    */
-  public async run(context: { benchmarks: string[]; steps: Step[] }) {
+  public async run(context: { benchmarks: { processName : string, executable : string }[]; steps: Step[] }) {
     for (let benchmark of context.benchmarks) {
-      await PlatformUtil.executeApplication(benchmark);
+      await PlatformUtil.executeApplication(benchmark.executable);
     }
 
-    let givenMap = new Map<string, any>();
-    for (let step of context.steps) {
-      if (!step.given) {
-        while (step) {
-          if (typeof step.with === "string") {
-            step.with = givenMap.get(step.with);
+      let givenMap = new Map<string, any>();
+      for (let step of context.steps) {
+          if (!step.given) {
+              for (let benchmark of context.benchmarks) {
+                  await PlatformUtil.focusApplication(benchmark.processName);
+
+                  let currentStep = step;
+                  while (currentStep) {
+                      if (typeof currentStep.with === "string") {
+                          currentStep.with = givenMap.get(currentStep.with);
+                      }
+                      currentStep.with = currentStep.with ? Object.assign(currentStep.with, { processName: benchmark.processName }) : { processName: benchmark.processName };
+
+                      await this.runnable.get(currentStep.run)(currentStep.with);
+                      currentStep = currentStep.then;
+                  }
+              }
+          } else {
+              givenMap.set(step.given, step.with);
           }
-
-          for (let benchmark of context.benchmarks) {
-            await PlatformUtil.focusApplication(benchmark);
-            step.with = Object.assign({ benchmark }, step.with);
-
-            await this.runnable.get(step.run)(step.with);
-          }
-
-          step = step.then;
-        }
-      } else {
-        givenMap.set(step.given, step.with);
       }
-    }
   }
 }

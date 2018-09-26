@@ -1,5 +1,6 @@
 import * as robotjs from "robotjs";
 import { Run, With } from "../util/BenchmarkRunner";
+import {promisify} from "util";
 
 export default class RobotSteps {
   @Run("Basic Login")
@@ -47,19 +48,29 @@ export default class RobotSteps {
     @With("x") x: string,
     @With("y") y: string,
     @With("button") button: "left" | "middle" | "right",
-    @With("double") double: boolean
+    @With("double") double: boolean,
+    @With("radius") radius : number
   ) {
     let posX: number = this.convertPosition(x, "width");
     let posY: number = this.convertPosition(y, "height");
 
     robotjs.moveMouse(posX, posY);
-    robotjs.mouseClick(button, double);
+    if (!radius) radius = 0;
+    for (let xOff = -radius; xOff < radius + 1; xOff++) {
+        for (let yOff = -radius; yOff < radius + 1; yOff++) {
+            if (xOff === radius || yOff === radius) {
+                robotjs.moveMouseSmooth(posX + xOff, posY + yOff);
+                robotjs.mouseClick(button, double);
+                await promisify(setTimeout)(100);
+            }
+        }
+    }
   }
 
   private convertPosition(val: string, dim: "width" | "height") {
     if (val.includes("%")) {
       let screenSize: number = robotjs.getScreenSize()[dim];
-      return screenSize * Number.parseInt(val.substr(0, val.length - 1)) * 0.01;
+      return screenSize * Number.parseFloat(val.substr(0, val.length - 1)) * 0.01;
     }
 
     return Number.parseFloat(val);

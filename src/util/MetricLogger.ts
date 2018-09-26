@@ -19,16 +19,16 @@ export default class MetricLogger {
     }
   }
 
-  private static async logMemoryWindows(application: string): Promise<MetricLog> {
+  private static async logMemoryWindows(processName: string): Promise<MetricLog> {
     let { stdout } = await PlatformUtil.execute(
       `powershell.exe -ExecutionPolicy ByPass -file ${path.resolve(
         __dirname,
         "../../scripts/get-process.ps1"
-      )} -processName ${PlatformUtil.windowsApplicationName(application)}`
+      )} -processName ${processName}`
     );
 
     let getNext = () => {
-      let index = stdout.toLowerCase().indexOf(application.toLowerCase());
+      let index = stdout.toLowerCase().indexOf(processName.toLowerCase());
       stdout = index !== -1 ? stdout.substring(index) : "";
       return stdout;
     };
@@ -58,7 +58,7 @@ export default class MetricLogger {
     }
 
     return new MetricLog(
-      application,
+      processName,
       "Windows",
       this.LOG_STREAM_ID,
       "Total Private Working Set",

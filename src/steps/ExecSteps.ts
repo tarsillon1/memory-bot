@@ -19,13 +19,13 @@ export default class ExecSteps {
   }
 
   @Run("Full Screen")
-  public async fullScreen(@With("benchmark") application) {
-    await PlatformUtil.fullScreenApplication(application);
+  public async fullScreen(@With("processName") processName) {
+    await PlatformUtil.fullScreenApplication(processName);
   }
 
   @Run("Log Memory")
   public async logMemory(
-    @With("benchmark") application,
+    @With("processName") processName,
     @With("every") every: string,
     @With("for") forTime: string
   ) {
@@ -33,7 +33,7 @@ export default class ExecSteps {
     let forNum: number = ExecSteps.parseTime(forTime);
 
     let memoryLog = async (): Promise<void> => {
-      let log: MetricLog = await MetricLogger.logMemory(application);
+      let log: MetricLog = await MetricLogger.logMemory(processName);
 
       this.logCache.push(log);
       if (this.logCache.length === this.CACHE_CAPACITY) {
