@@ -1,4 +1,5 @@
 .idea
 .env
+steps.json
 node_modules
 build

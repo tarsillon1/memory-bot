@@ -1,94 +1,26 @@
 import * as path from "path";
-import * as util from "util";
-import * as childProcess from "child_process";
-import * as fs from "fs";
-import * as dotenv from "dotenv";
-import { promisify } from "util";
-import { Static } from "../model/AppDecorator";
 import { MetricLog } from "../model/MetricLog";
-import AggregatorClient from "../client/AggregatorClient";
+import PlatformUtil from "./PlatformUtil";
 
-@Static
-export default class MemoryLogger {
+export default class MetricLogger {
   private static readonly LOG_STREAM_ID: string = [...Array(10)]
     .map(i => (~~(Math.random() * 36)).toString(36))
     .join("");
-  private static readonly EXEC = util.promisify(childProcess.exec);
-  private static readonly CACHE_CAPACITY = 60;
 
-  private static processNames: string[];
-  private static metricEvents: string[] = [];
-  private static aggregatorClient: AggregatorClient;
-  private static logCache: MetricLog[] = [];
-
-  public static initialize() {
-    dotenv.config();
-    this.processNames = JSON.parse(process.env.PROCESS_NAMES);
-    this.aggregatorClient = new AggregatorClient();
-
-    let platform = process.platform;
-    console.log(`This platform is ${platform}.`);
-
-    let saveData = (name: string, log: MetricLog) => {
-      let original = fs.existsSync(`${name}.out`)
-        ? fs.readFileSync(`${name}.out`, "utf-8").slice(0, -1)
-        : "[";
-      fs.writeFileSync(
-        `${name}.out`,
-        `${original}${original === "[" ? "" : ","}\n${JSON.stringify(
-          log,
-          null,
-          4
-        )}]`,
-        "utf-8"
-      );
-    };
-
-    let memoryLog = async () => {
-      for (let name of this.processNames) {
-        let log: MetricLog = null;
-        switch (platform.toUpperCase()) {
-          case "WIN32":
-            log = await MemoryLogger.logWindows(name);
-            saveData(name, log);
-            break;
-          case "DARWIN":
-            log = await MemoryLogger.logUnix(name);
-            saveData(name, log);
-            break;
-          case "LINUX":
-            //TO-DO
-            break;
-        }
-
-        this.logCache.push(log);
-        if (this.logCache.length === this.CACHE_CAPACITY) {
-          await this.aggregatorClient.sendMetricLogs(this.logCache);
-          this.logCache = [];
-        }
-
-        this.metricEvents = [];
-      }
-    };
-
-    (async () => {
-      await promisify(setTimeout)(1000);
-      while (true) {
-        let time = Date.now();
-        await memoryLog();
-
-        time = Date.now() - time;
-        if (time < 1000) await promisify(setTimeout)(1000 - time);
-      }
-    })();
+  public static async logMemory(name: string): Promise<MetricLog> {
+    switch (PlatformUtil.getPlatform()) {
+      case "WIN32":
+        return await this.logMemoryWindows(name);
+      case "DARWIN":
+        return await this.logMemoryUnix(name);
+      case "LINUX":
+        //TO-DO
+        break;
+    }
   }
 
-  public static metricEvent(event: string) {
-    this.metricEvents.push(event);
-  }
-
-  private static async logWindows(name): Promise<MetricLog> {
-    let { stdout } = await this.EXEC(
+  private static async logMemoryWindows(name: string): Promise<MetricLog> {
+    let { stdout } = await PlatformUtil.execute(
       `powershell.exe -ExecutionPolicy ByPass -file ${path.resolve(
         __dirname,
         "../../scripts/get-process.ps1"
@@ -131,15 +63,14 @@ export default class MemoryLogger {
       this.LOG_STREAM_ID,
       "Total Private Working Set",
       totalPrivateWorkingSet,
-      logTree,
-      this.metricEvents
+      logTree
     );
   }
 
-  private static async logUnix(name): Promise<MetricLog> {
+  private static async logMemoryUnix(name: string): Promise<MetricLog> {
     let stdout: string = null;
     try {
-      stdout = (await this.EXEC(
+      stdout = (await PlatformUtil.execute(
         `sh ${path.resolve(__dirname, "../../scripts/get-process.sh")} ${name}`
       )).stdout;
     } catch (e) {
@@ -199,8 +130,7 @@ export default class MemoryLogger {
       this.LOG_STREAM_ID,
       "Total Private Working Set",
       totalPrivateWorkingSet,
-      logTree,
-      this.metricEvents
+      logTree
     );
   }
 }

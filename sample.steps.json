@@ -1,0 +1,46 @@
+{
+  "steps": [
+    {
+      "run": "Log Memory",
+      "with": {
+        "every": "1s",
+        "for": "1h",
+        "applications": [
+          "Application"
+        ]
+      }
+    },
+    {
+      "run": "Execute Application",
+      "with": {
+        "applications": "Application"
+      },
+      "then": {
+        "run": "Wait",
+        "with": {
+          "time": "10s"
+        },
+        "then": {
+          "run": "Basic Login",
+          "with": {
+            "username": "test@user.com",
+            "password": "test123"
+          }
+        }
+      }
+    },
+    {
+      "run": "Wait",
+      "with": {
+        "time": "1m"
+      }
+    },
+    {
+      "run": "Send Messages",
+      "with": {
+        "count": 100,
+        "message": "Hello world!"
+      }
+    }
+  ]
+}
