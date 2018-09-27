@@ -18,6 +18,14 @@ export function With(arg: string) {
   };
 }
 
+class BenchmarkContext {
+  benchmarks: {
+    unix: { processName: string; executable: string }[];
+    windows: { processName: string; executable: string }[];
+  };
+  steps: Step[];
+}
+
 class Step {
   given: string;
   run: string;
@@ -34,8 +42,11 @@ export default class BenchmarkRunner {
    */
   public async registerSteps(...steps: Object[]) {
     for (let step of steps) {
+      // Read each function within the object and search the property's metadata for the ID to call the function by.
       for (let property of Reflect.getMetadata("runnable", step).values()) {
         let run: string = Reflect.getMetadata("run", step, property);
+
+        // On function call inject function parameters using args metadata.
         this.runnable.set(run, async (withArgs: any) => {
           let args = [];
 
@@ -43,7 +54,13 @@ export default class BenchmarkRunner {
           let param = null;
           while (index === 0 || param) {
             param = Reflect.getMetadata(`with:${index}`, step, property);
-            if (param) args.push(withArgs[param]);
+
+            let value = withArgs[param];
+            if (typeof value === "string" && value.startsWith("$")) {
+              value = process.env[value.substring(1)];
+            }
+
+            if (param) args.push(value);
             index++;
           }
 
@@ -55,33 +72,52 @@ export default class BenchmarkRunner {
 
   /**
    * Run the steps.
-   * @param context {{steps: object[]}} the step context.
    */
-  public async run(context: { benchmarks: { processName : string, executable : string }[]; steps: Step[] }) {
-    for (let benchmark of context.benchmarks) {
-      await PlatformUtil.executeApplication(benchmark.executable);
+  public async run(context: BenchmarkContext) {
+    // Run executable depending on platform.
+    let platform: string = PlatformUtil.getPlatform();
+    switch (platform) {
+      case "WIN32":
+        platform = "windows";
+        break;
+      case "DARWIN":
+        platform = "unix";
+        break;
+      case "LINUX":
+        platform = "linux";
+        break;
     }
 
-      let givenMap = new Map<string, any>();
-      for (let step of context.steps) {
-          if (!step.given) {
-              for (let benchmark of context.benchmarks) {
-                  await PlatformUtil.focusApplication(benchmark.processName);
+    for (let benchmark of context.benchmarks[platform]) {
+      await PlatformUtil.executeProcess(benchmark.executable);
+    }
 
-                  let currentStep = step;
-                  while (currentStep) {
-                      if (typeof currentStep.with === "string") {
-                          currentStep.with = givenMap.get(currentStep.with);
-                      }
-                      currentStep.with = currentStep.with ? Object.assign(currentStep.with, { processName: benchmark.processName }) : { processName: benchmark.processName };
+    let givenMap = new Map<string, any>();
+    for (let step of context.steps) {
+      if (!step.given) {
+        // Run the current step chain for all benchmark processes.
+        for (let benchmark of context.benchmarks[platform]) {
+          await PlatformUtil.focusProcess(benchmark.processName);
 
-                      await this.runnable.get(currentStep.run)(currentStep.with);
-                      currentStep = currentStep.then;
-                  }
-              }
-          } else {
-              givenMap.set(step.given, step.with);
+          let currentStep = step;
+          while (currentStep) {
+            // Inject env if input string value contains a dollar sign.
+            if (typeof currentStep.with === "string") {
+              currentStep.with = givenMap.get(currentStep.with);
+            }
+            currentStep.with = currentStep.with
+              ? Object.assign(currentStep.with, {
+                  processName: benchmark.processName
+                })
+              : { processName: benchmark.processName };
+
+            await this.runnable.get(currentStep.run)(currentStep.with);
+            currentStep = currentStep.then;
           }
+        }
+      } else {
+        givenMap.set(step.given, step.with);
       }
+    }
   }
 }
