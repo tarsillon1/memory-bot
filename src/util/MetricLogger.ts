@@ -13,9 +13,9 @@ export default class MetricLogger {
   }
 
   public static getLogEvents(processName: string) {
-      let logEvents : string[] = this.LOG_EVENTS.get(processName);
-      this.LOG_EVENTS.set(processName, []);
-      return logEvents;
+    let logEvents: string[] = this.LOG_EVENTS.get(processName);
+    this.LOG_EVENTS.set(processName, []);
+    return logEvents;
   }
 
   /**
@@ -53,8 +53,8 @@ export default class MetricLogger {
       return stdout;
     };
     let totalPrivateWorkingSet = 0;
-    let logTree: Log[] = [];
-    let events : string[] = this.getLogEvents(processName);
+    let relatedLogs: Log[] = [];
+    let events: string[] = this.getLogEvents(processName);
     while (getNext()) {
       // On windows the process name does not contains spaces. So the process name ends at the index of the next space.
       let name = stdout.substring(0, stdout.indexOf(" ")).trim();
@@ -68,8 +68,9 @@ export default class MetricLogger {
         )
       );
       totalPrivateWorkingSet += privateWorkingSet ? privateWorkingSet : 0;
-      logTree.push(
-        new Log(this.LOG_STREAM_ID, {
+      relatedLogs.push(
+        new Log( {
+          logStreamId : this.LOG_STREAM_ID,
           processName: name,
           platform: "Windows",
           metricName: "Private Working Set",
@@ -80,15 +81,15 @@ export default class MetricLogger {
     }
 
     return new Log(
-      this.LOG_STREAM_ID,
       {
+        logStreamId : this.LOG_STREAM_ID,
         processName: processName,
         platform: "Windows",
         metricName: "Total Private Working Set",
         metricValue: totalPrivateWorkingSet,
         events
       },
-      logTree
+      relatedLogs
     );
   }
 
@@ -113,8 +114,8 @@ export default class MetricLogger {
       return stdout;
     };
     let totalPrivateWorkingSet = 0;
-    let logTree: Log[] = [];
-    let events : string[] = this.getLogEvents(processName);
+    let relatedLogs: Log[] = [];
+    let events: string[] = this.getLogEvents(processName);
     while (getNext()) {
       // Unix process contain spaces, so go to the end of the memory value, and then backtrack to the last space to find the name.
       let lastIndex = stdout.substring(0, stdout.indexOf("+")).lastIndexOf(" ");
@@ -147,8 +148,9 @@ export default class MetricLogger {
 
       totalPrivateWorkingSet += privateWorkingSet;
 
-      logTree.push(
-        new Log(this.LOG_STREAM_ID, {
+      relatedLogs.push(
+        new Log( {
+          logStreamId : this.LOG_STREAM_ID,
           processName: name,
           platform: "Unix",
           metricName: "Private Working Set",
@@ -159,15 +161,15 @@ export default class MetricLogger {
     }
 
     return new Log(
-      this.LOG_STREAM_ID,
       {
+        logStreamId : this.LOG_STREAM_ID,
         processName: processName,
         platform: "Unix",
         metricName: "Total Private Working Set",
         metricValue: totalPrivateWorkingSet,
         events
       },
-      logTree
+      relatedLogs
     );
   }
 }

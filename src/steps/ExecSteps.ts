@@ -3,7 +3,7 @@ import { promisify } from "util";
 import MetricLogger from "../util/MetricLogger";
 import PlatformUtil from "../util/PlatformUtil";
 import { Run, With } from "../util/BenchmarkRunner";
-import {Log} from "../model/Log";
+import { Log } from "../model/Log";
 
 export default class ExecSteps {
   private aggregatorClient = new AggregatorClient();
