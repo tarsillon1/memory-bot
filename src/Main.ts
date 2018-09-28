@@ -4,7 +4,6 @@ import ExecSteps from "./steps/ExecSteps";
 import RobotSteps from "./steps/RobotSteps";
 import BenchmarkRunner from "./util/BenchmarkRunner";
 import * as path from "path";
-
 dotenv.config();
 
 (async () => {

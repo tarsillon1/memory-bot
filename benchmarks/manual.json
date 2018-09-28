@@ -1,0 +1,73 @@
+{
+  "benchmarks": {
+    "unix": [
+      {
+        "processName": "Google Chrome",
+        "executable": "Google Chrome"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "run": "Log Memory",
+      "with": {
+        "every": "1s",
+        "for": "1h"
+      },
+      "then": {
+        "run": "Wait",
+        "with": {
+          "time": "5s"
+        }
+      }
+    },
+    {
+      "run": "Basic Login",
+      "with": {
+        "username": "$SYMPHONY_USERNAME",
+        "password": "$SYMPHONY_PASSWORD"
+      },
+      "then": {
+        "run": "Full Screen",
+        "then": {
+          "run": "Wait",
+          "with": {
+            "time": "10s"
+          }
+        }
+      }
+    },
+    {
+      "run": "Log Events",
+      "with": {
+        "events": [
+          "Application Start"
+        ]
+      }
+    },
+    {
+      "run" : "Wait",
+      "with" : {
+        "time" : "2m"
+      }
+    },
+    {
+      "run": "Log Events",
+      "with": {
+        "events" : ["Send 100 Messages"]
+      }
+    },
+    {
+      "run" : "Wait",
+      "with" : {
+        "time" : "2m"
+      }
+    },
+    {
+      "run": "Log Events",
+      "with": {
+        "events" : ["Open Close 10 Windows"]
+      }
+    }
+  ]
+}

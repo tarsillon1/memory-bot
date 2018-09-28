@@ -93,7 +93,7 @@ export default class RobotSteps {
         if (xOff === radius || yOff === radius) {
           robotjs.moveMouseSmooth(posX + xOff, posY + yOff);
           robotjs.mouseClick(button, double);
-          await promisify(setTimeout)(100);
+          await promisify(setTimeout)(200);
         }
       }
     }
