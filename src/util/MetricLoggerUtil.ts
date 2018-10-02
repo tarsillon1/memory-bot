@@ -1,12 +1,18 @@
 import * as path from "path";
 import PlatformUtil from "./PlatformUtil";
 import { Log } from "../model/Log";
+import AggregatorClient from "../client/AggregatorClient";
+import { promisify } from "util";
 
-export default class MetricLogger {
+export default class MetricLoggerUtil {
   private static readonly LOG_STREAM_ID: string = [...Array(10)]
     .map(i => (~~(Math.random() * 36)).toString(36))
     .join("");
   private static readonly LOG_EVENTS: Map<string, string[]> = new Map();
+
+  private static readonly AGGREGATOR_CLIENT = new AggregatorClient();
+  private static readonly CACHE_CAPACITY: number = 30;
+  private static logCache: Log[] = [];
 
   public static logEvents(processName: string, events: string[]) {
     this.LOG_EVENTS.set(processName, events);
@@ -19,17 +25,86 @@ export default class MetricLogger {
   }
 
   /**
+   * Log the memory of the specified process.
+   * @param processName the name of the process to log memory.
+   * @param {string} every the period to log the memory of the process.
+   * @param {string} forTime the time to log repeat logging for.
+   * @param nameAliases aliases for process names.
+   */
+  public static async listenOnMemoryLogs(
+    processName: string,
+    every: string,
+    forTime: string,
+    nameAliases: { name: string; alias: string }[] = []
+  ) {
+    let everyNum: number = this.parseTime(every);
+    let forNum: number = this.parseTime(forTime);
+
+    let memoryLog = async (): Promise<void> => {
+      let log: Log = await this.getMemoryLog(processName, nameAliases);
+
+      this.logCache.push(log);
+      if (this.logCache.length === this.CACHE_CAPACITY) {
+        await this.AGGREGATOR_CLIENT.sendLogs(this.logCache);
+        this.logCache = [];
+      }
+    };
+
+    let time = Date.now();
+    while (time - Date.now() < forNum) {
+      let beforeLog = Date.now();
+      await memoryLog();
+
+      beforeLog = Date.now() - beforeLog;
+      if (beforeLog < everyNum)
+        await promisify(setTimeout)(everyNum - beforeLog);
+    }
+  }
+
+  /**
    * Create a memory metric log depending on platform.
    * @param {string} processName the name of the process to compute the memory of.
+   * @param nameAliases aliases for process names.
    */
-  public static async logMemory(processName: string): Promise<Log> {
+  public static async getMemoryLog(
+    processName: string,
+    nameAliases: { name: string; alias: string }[] = []
+  ): Promise<Log> {
+    let log: any = null;
     switch (PlatformUtil.getPlatform()) {
       case "WIN32":
-        return await this.logMemoryWindows(processName);
+        log = await this.logMemoryWindows(processName);
       case "DARWIN":
-        return await this.logMemoryUnix(processName);
+        log = await this.logMemoryUnix(processName);
       case "LINUX":
         //TO-DO
+        break;
+    }
+
+    for (let mappings of nameAliases) {
+      if (log.fields.processName === mappings.name) {
+        log.fields.processName = mappings.alias;
+      }
+    }
+
+    return log;
+  }
+
+  /**
+   * Parse the time of the given string.
+   * @param {string} parse the string to parse.
+   * @returns {number} the time in milliseconds.
+   */
+  private static parseTime(parse: string): number {
+    let time: number = Number.parseInt(parse.substring(0, parse.length));
+    switch (parse.substring(parse.length - 1)) {
+      case "s":
+        return time * 1000;
+      case "m":
+        return time * 60000;
+      case "h":
+        return time * 600000;
+      default:
         break;
     }
   }
@@ -69,8 +144,8 @@ export default class MetricLogger {
       );
       totalPrivateWorkingSet += privateWorkingSet ? privateWorkingSet : 0;
       relatedLogs.push(
-        new Log( {
-          logStreamId : this.LOG_STREAM_ID,
+        new Log({
+          logStreamId: this.LOG_STREAM_ID,
           processName: name,
           platform: "Windows",
           metricName: "Private Working Set",
@@ -82,7 +157,7 @@ export default class MetricLogger {
 
     return new Log(
       {
-        logStreamId : this.LOG_STREAM_ID,
+        logStreamId: this.LOG_STREAM_ID,
         processName: processName,
         platform: "Windows",
         metricName: "Total Private Working Set",
@@ -149,8 +224,8 @@ export default class MetricLogger {
       totalPrivateWorkingSet += privateWorkingSet;
 
       relatedLogs.push(
-        new Log( {
-          logStreamId : this.LOG_STREAM_ID,
+        new Log({
+          logStreamId: this.LOG_STREAM_ID,
           processName: name,
           platform: "Unix",
           metricName: "Private Working Set",
@@ -162,7 +237,7 @@ export default class MetricLogger {
 
     return new Log(
       {
-        logStreamId : this.LOG_STREAM_ID,
+        logStreamId: this.LOG_STREAM_ID,
         processName: processName,
         platform: "Unix",
         metricName: "Total Private Working Set",

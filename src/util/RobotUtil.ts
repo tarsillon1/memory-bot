@@ -1,18 +1,12 @@
 import * as robotjs from "robotjs";
-import { Run, With } from "../util/BenchmarkRunner";
-import { promisify } from "util";
 
-export default class RobotSteps {
+export default class RobotUtil {
   /**
    * Login using a username and password.
    * @param {string} username the username to use for login.
    * @param {string} password the password to use for login.
    */
-  @Run("Basic Login")
-  public async basicLogin(
-    @With("username") username: string,
-    @With("password") password: string
-  ) {
+  public static async basicLogin(username: string, password: string) {
     let clearField = () => {
       for (let i = 0; i < 200; i++) {
         robotjs.keyTap("backspace");
@@ -34,11 +28,7 @@ export default class RobotSteps {
    * @param {number} count the number of messages to send.
    * @param {string} message the message to send.
    */
-  @Run("Send Messages")
-  public async sendMessages(
-    @With("count") count: number,
-    @With("message") message: string
-  ) {
+  public static async sendMessages(count: number, message: string) {
     for (let i = 0; i < count; i++) {
       robotjs.typeStringDelayed(message, 60000);
       robotjs.keyTap("enter");
@@ -50,10 +40,9 @@ export default class RobotSteps {
    * @param from from position to drag from.
    * @param to to position to drag to.
    */
-  @Run("Drag")
-  public async drag(
-    @With("from") from: { x: string; y: string },
-    @With("to") to: { x: string; y: string }
+  public static async drag(
+    from: { x: string; y: string },
+    to: { x: string; y: string }
   ) {
     let fromXPos = this.convertPosition(from.x, "width");
     let fromYPos = this.convertPosition(from.y, "height");
@@ -73,30 +62,18 @@ export default class RobotSteps {
    * @param {string} y the y position to click.
    * @param {"left" | "middle" | "right"} button the button to click.
    * @param {boolean} double if true will double click the mouse.
-   * @param {number} radius all items within pixel radius will be clicked.
    */
-  @Run("Click")
-  public async click(
-    @With("x") x: string,
-    @With("y") y: string,
-    @With("button") button: "left" | "middle" | "right",
-    @With("double") double: boolean,
-    @With("radius") radius: number
+  public static async click(
+    x: string,
+    y: string,
+    button: "left" | "middle" | "right",
+    double: boolean
   ) {
     let posX: number = this.convertPosition(x, "width");
     let posY: number = this.convertPosition(y, "height");
 
     robotjs.moveMouse(posX, posY);
-    if (!radius) radius = 0;
-    for (let xOff = -radius; xOff < radius + 1; xOff++) {
-      for (let yOff = -radius; yOff < radius + 1; yOff++) {
-        if (xOff === radius || yOff === radius) {
-          robotjs.moveMouseSmooth(posX + xOff, posY + yOff);
-          robotjs.mouseClick(button, double);
-          await promisify(setTimeout)(200);
-        }
-      }
-    }
+    robotjs.mouseClick(button, double);
   }
 
   /**
@@ -106,7 +83,7 @@ export default class RobotSteps {
    * @param {"width" | "height"} dim the screen dimension to use for percent conversion.
    * @returns {number} the pixel position.
    */
-  private convertPosition(val: string, dim: "width" | "height") {
+  private static convertPosition(val: string, dim: "width" | "height") {
     if (val.includes("%")) {
       let screenSize: number = robotjs.getScreenSize()[dim];
       return (

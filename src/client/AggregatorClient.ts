@@ -20,7 +20,7 @@ export default class AggregatorClient {
       .post(
         `/aggregator/collect?apiToken=${
           process.env.AGGREGATOR_API_TOKEN
-        }&schema=com.aggregator.log.trigger&strict=true`,
+        }&schema=com.aggregator.log.trigger`,
         {
           logs
         }

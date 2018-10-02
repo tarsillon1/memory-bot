@@ -75,6 +75,44 @@ export default class PlatformUtil {
   }
 
   /**
+   * Set the window location and size based on process name.
+   * @param {string} processName the process name
+   * @param {number} x location of window x.
+   * @param {number} y location of window y.
+   * @param {number} width the width of the window.
+   * @param {number} height the height of the window.
+   */
+  public static async setWindowProcess(
+    processName: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) {
+    switch (this.getPlatform()) {
+      case "WIN32":
+        await this.execute(
+          `powershell.exe Get-Process ${processName} | 
+                    powershell.exe -ExecutionPolicy ByPass -file ${path.resolve(
+                      __dirname,
+                      "../../scripts/set-window.ps1"
+                    )} -X ${x} -Y ${y} -Width ${width} -Height ${height}`
+        );
+        break;
+      case "DARWIN":
+        await this.execute(
+          `osascript ${path.resolve(
+            __dirname,
+            "../../scripts/set-window.scpt"
+          )} "${processName}" ${x} ${y} ${width} ${height}`
+        );
+        break;
+      case "LINUX":
+        break;
+    }
+  }
+
+  /**
    * Execute command.
    * @param {string} command the command.
    */
