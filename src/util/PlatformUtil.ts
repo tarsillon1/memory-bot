@@ -92,11 +92,10 @@ export default class PlatformUtil {
     switch (this.getPlatform()) {
       case "WIN32":
         await this.execute(
-          `powershell.exe Get-Process ${processName} | 
-                    powershell.exe -ExecutionPolicy ByPass -file ${path.resolve(
+          `powershell.exe ${path.resolve(
                       __dirname,
                       "../../scripts/set-window.ps1"
-                    )} -X ${x} -Y ${y} -Width ${width} -Height ${height}`
+                    )} -ProcessName ${processName} -X ${x} -Y ${y} -Width ${width} -Height ${height} -Passthru`
         );
         break;
       case "DARWIN":

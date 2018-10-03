@@ -1,4 +1,5 @@
 import PlatformUtil from "./PlatformUtil";
+import {promisify} from "util";
 
 export class BenchmarkContext {
   benchmarks: {
@@ -35,6 +36,7 @@ export default class BenchmarkRunner {
     for (let step of context.steps) {
       for (let benchmark of context.benchmarks[platform]) {
         await PlatformUtil.focusProcess(benchmark.processName);
+        await promisify(setTimeout)(1000);
         await Promise.resolve(step(benchmark.processName));
       }
     }

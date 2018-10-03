@@ -74,8 +74,10 @@ export default class MetricLoggerUtil {
     switch (PlatformUtil.getPlatform()) {
       case "WIN32":
         log = await this.logMemoryWindows(processName);
+        break;
       case "DARWIN":
         log = await this.logMemoryUnix(processName);
+        break;
       case "LINUX":
         //TO-DO
         break;
@@ -121,28 +123,23 @@ export default class MetricLoggerUtil {
       )} -processName ${processName}`
     );
 
-    // Find the next index of the process name.
     let getNext = () => {
-      let index = stdout.toLowerCase().indexOf(processName.toLowerCase());
-      stdout = index !== -1 ? stdout.substring(index) : "";
+      let index = stdout.indexOf("@{CommandLine=");
+      stdout = index !== -1 ? stdout.substring(index) : null;
       return stdout;
     };
     let totalPrivateWorkingSet = 0;
     let relatedLogs: Log[] = [];
     let events: string[] = this.getLogEvents(processName);
     while (getNext()) {
-      // On windows the process name does not contains spaces. So the process name ends at the index of the next space.
-      let name = stdout.substring(0, stdout.indexOf(" ")).trim();
-      stdout = stdout.substring(stdout.indexOf(" ")).trim();
+      let row : string = stdout.substring(0, stdout.substring(1).indexOf("@{CommandLine=") !== -1 ? stdout.substring(1).indexOf("@{CommandLine=") + 1 : stdout.length);
+      let name = stdout.substring("@{CommandLine=".length, row.lastIndexOf(" ")).trim();
+      stdout = stdout.substring(row.lastIndexOf(" ")).trim();
 
       // The private working set ends before the start of the next line.
-      let privateWorkingSet: number = Number.parseInt(
-        stdout.substring(
-          0,
-          stdout.indexOf("\n") !== -1 ? stdout.indexOf("\n") : stdout.length
-        )
-      );
+      let privateWorkingSet: number = Number.parseInt(stdout.substring(0, stdout.indexOf("\r") !== -1 ? stdout.indexOf("\r") : stdout.substring(stdout.lastIndexOf(" "), stdout.length)));
       totalPrivateWorkingSet += privateWorkingSet ? privateWorkingSet : 0;
+
       relatedLogs.push(
         new Log({
           logStreamId: this.LOG_STREAM_ID,
@@ -154,6 +151,8 @@ export default class MetricLoggerUtil {
         })
       );
     }
+
+    while (true) {}
 
     return new Log(
       {
