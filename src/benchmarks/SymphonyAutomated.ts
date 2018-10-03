@@ -4,43 +4,74 @@ import { promisify } from "util";
 import { BenchmarkContext } from "../util/BenchmarkRunner";
 import RobotUtil from "../util/RobotUtil";
 
-const clickWindow = async (window: number) => {
-    let x : string = "75";
-    let y : number = null;
-    switch (PlatformUtil.getPlatform()) {
-        case "WIN32":
-            y = 195;
-            break;
-        case "DARWIN":
-            y = 215;
-            break;
-        case "LINUX":
-            //TO-DO
-            break;
-        default:
-            break;
+const alias = (processName: string) => {
+    let name: string = "";
+    if (processName.toLowerCase().includes("openfin")) {
+        name += "OpenFin ";
     }
+
+    if (processName.toLowerCase().includes("-startup-url")) {
+        name += "Startup ";
+    }
+
+    if (processName.toLowerCase().includes("--type=gpu-process")) {
+        name += "GPU ";
+
+        let stripToken = processName.substring(
+            processName.indexOf("--service-pipe-token=") +
+            "--service-pipe-token=".length
+        );
+        name += stripToken.substring(0, stripToken.indexOf(" ") + 1);
+    }
+
+    if (processName.toLowerCase().includes("--type=renderer")) {
+        name += "Render ";
+    }
+
+    if (processName.toLowerCase().includes("rvm")) {
+        name += "RVM";
+    }
+
+    return name.trim();
+};
+
+const clickWindow = async (window: number) => {
+  let x: string = "75";
+  let y: number = null;
+  switch (PlatformUtil.getPlatform()) {
+    case "WIN32":
+      y = 195;
+      break;
+    case "DARWIN":
+      y = 215;
+      break;
+    case "LINUX":
+      //TO-DO
+      break;
+    default:
+      break;
+  }
 
   await RobotUtil.click(x, (y + 23 * window).toString(), "left", false);
   await promisify(setTimeout)(2000);
 };
 const openWindow = async (window: number) => {
-  let x : string = null;
-  let y : string = null;
+  let x: string = null;
+  let y: string = null;
   switch (PlatformUtil.getPlatform()) {
-      case "WIN32":
-        x = "665";
-        y = "110";
-        break;
-      case "DARWIN":
-        x = "670";
-        y = "130";
-        break;
-      case "LINUX":
-        //TO-DO
-          break;
-        default:
-          break;
+    case "WIN32":
+      x = "665";
+      y = "110";
+      break;
+    case "DARWIN":
+      x = "670";
+      y = "130";
+      break;
+    case "LINUX":
+      //TO-DO
+      break;
+    default:
+      break;
   }
 
   await clickWindow(window);
@@ -48,45 +79,45 @@ const openWindow = async (window: number) => {
   await promisify(setTimeout)(5000);
 };
 const hideWindow = async () => {
-    let x : string = null;
-    let y : string = null;
-    switch (PlatformUtil.getPlatform()) {
-        case "WIN32":
-            x = "675";
-            y = "675";
-            break;
-        case "DARWIN":
-            x = "680";
-            y = "130";
-            break;
-        case "LINUX":
-            //TO-DO
-            break;
-        default:
-            break;
-    }
+  let x: string = null;
+  let y: string = null;
+  switch (PlatformUtil.getPlatform()) {
+    case "WIN32":
+      x = "675";
+      y = "675";
+      break;
+    case "DARWIN":
+      x = "680";
+      y = "130";
+      break;
+    case "LINUX":
+      //TO-DO
+      break;
+    default:
+      break;
+  }
 
   await RobotUtil.click(x, y, "left", false);
   await promisify(setTimeout)(1000);
 };
 const closeWindow = async (processName: string, window: number) => {
-    let x : string = null;
-    let y : string = null;
-    switch (PlatformUtil.getPlatform()) {
-        case "WIN32":
-            x = "357";
-            y = "52";
-            break;
-        case "DARWIN":
-            x = "680";
-            y = "130";
-            break;
-        case "LINUX":
-            //TO-DO
-            break;
-        default:
-            break;
-    }
+  let x: string = null;
+  let y: string = null;
+  switch (PlatformUtil.getPlatform()) {
+    case "WIN32":
+      x = "357";
+      y = "52";
+      break;
+    case "DARWIN":
+      x = "680";
+      y = "130";
+      break;
+    case "LINUX":
+      //TO-DO
+      break;
+    default:
+      break;
+  }
 
   await clickWindow(window);
   await promisify(setTimeout)(2000);
@@ -119,7 +150,7 @@ const benchmark: BenchmarkContext = {
   steps: [
     // Start logging memory
     async processName => {
-      MetricLoggerUtil.listenOnMemoryLogs(processName, "1s", "1h").catch(
+      MetricLoggerUtil.listenOnMemoryLogs(processName, "1s", "1h", alias).catch(
         console.log
       );
     },
@@ -174,18 +205,17 @@ const benchmark: BenchmarkContext = {
 
     //Open close 10 Windows
 
-      //Open 2 Windows
-      async() => {
-          await openWindow(3);
-          await hideWindow();
+    //Open 2 Windows
+    async () => {
+      await openWindow(3);
+      await hideWindow();
 
-          await openWindow(4);
-          await hideWindow();
-      },
+      await openWindow(4);
+      await hideWindow();
+    },
 
-      // Close all 5 windows
+    // Close all 5 windows
     async processName => {
-
       await closeWindow(processName, 0);
       await closeWindow(processName, 1);
       await closeWindow(processName, 2);
@@ -193,17 +223,17 @@ const benchmark: BenchmarkContext = {
       await closeWindow(processName, 4);
     },
 
-     // Open 3 windows
-      async () => {
-          await openWindow(0);
-          await hideWindow();
+    // Open 3 windows
+    async () => {
+      await openWindow(0);
+      await hideWindow();
 
-          await openWindow(1);
-          await hideWindow();
+      await openWindow(1);
+      await hideWindow();
 
-          await openWindow(2);
-          await hideWindow();
-      }
+      await openWindow(2);
+      await hideWindow();
+    }
   ]
 };
 

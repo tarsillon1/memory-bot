@@ -29,19 +29,25 @@ export default class MetricLoggerUtil {
    * @param processName the name of the process to log memory.
    * @param {string} every the period to log the memory of the process.
    * @param {string} forTime the time to log repeat logging for.
-   * @param nameAliases aliases for process names.
+   * @param alias function for adding an alias field based on the process name.
    */
   public static async listenOnMemoryLogs(
     processName: string,
     every: string,
     forTime: string,
-    nameAliases: { name: string; alias: string }[] = []
+    alias: (processName: string) => string = processName => processName
   ) {
     let everyNum: number = this.parseTime(every);
     let forNum: number = this.parseTime(forTime);
 
     let memoryLog = async (): Promise<void> => {
-      let log: Log = await this.getMemoryLog(processName, nameAliases);
+      let log: Log = await this.getMemoryLog(processName);
+
+      log.fields.processAlias = alias(log.fields.processName);
+      log.relatedLogs.forEach(
+        related =>
+          (related.fields.processAlias = alias(related.fields.processName))
+      );
 
       this.logCache.push(log);
       if (this.logCache.length === this.CACHE_CAPACITY) {
@@ -64,12 +70,8 @@ export default class MetricLoggerUtil {
   /**
    * Create a memory metric log depending on platform.
    * @param {string} processName the name of the process to compute the memory of.
-   * @param nameAliases aliases for process names.
    */
-  public static async getMemoryLog(
-    processName: string,
-    nameAliases: { name: string; alias: string }[] = []
-  ): Promise<Log> {
+  public static async getMemoryLog(processName: string): Promise<Log> {
     let log: any = null;
     switch (PlatformUtil.getPlatform()) {
       case "WIN32":
@@ -81,12 +83,6 @@ export default class MetricLoggerUtil {
       case "LINUX":
         //TO-DO
         break;
-    }
-
-    for (let mappings of nameAliases) {
-      if (log.fields.processName === mappings.name) {
-        log.fields.processName = mappings.alias;
-      }
     }
 
     return log;
@@ -132,12 +128,24 @@ export default class MetricLoggerUtil {
     let relatedLogs: Log[] = [];
     let events: string[] = this.getLogEvents(processName);
     while (getNext()) {
-      let row : string = stdout.substring(0, stdout.substring(1).indexOf("@{CommandLine=") !== -1 ? stdout.substring(1).indexOf("@{CommandLine=") + 1 : stdout.length);
-      let name = stdout.substring("@{CommandLine=".length, row.lastIndexOf(" ")).trim();
+      let row: string = stdout.substring(
+        0,
+        stdout.indexOf("\r") !== -1 ? stdout.indexOf("\r") : stdout.length
+      );
+      let name = stdout
+        .substring("@{CommandLine=".length, row.lastIndexOf(" "))
+        .trim();
       stdout = stdout.substring(row.lastIndexOf(" ")).trim();
 
       // The private working set ends before the start of the next line.
-      let privateWorkingSet: number = Number.parseInt(stdout.substring(0, stdout.indexOf("\r") !== -1 ? stdout.indexOf("\r") : stdout.substring(stdout.lastIndexOf(" "), stdout.length)));
+      let privateWorkingSet: number = Number.parseInt(
+        stdout.substring(
+          0,
+          stdout.indexOf("\r") !== -1
+            ? stdout.indexOf("\r")
+            : stdout.substring(stdout.lastIndexOf(" "), stdout.length)
+        )
+      );
       totalPrivateWorkingSet += privateWorkingSet ? privateWorkingSet : 0;
 
       relatedLogs.push(

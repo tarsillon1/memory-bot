@@ -93,9 +93,9 @@ export default class PlatformUtil {
       case "WIN32":
         await this.execute(
           `powershell.exe ${path.resolve(
-                      __dirname,
-                      "../../scripts/set-window.ps1"
-                    )} -ProcessName ${processName} -X ${x} -Y ${y} -Width ${width} -Height ${height} -Passthru`
+            __dirname,
+            "../../scripts/set-window.ps1"
+          )} -ProcessName ${processName} -X ${x} -Y ${y} -Width ${width} -Height ${height} -Passthru`
         );
         break;
       case "DARWIN":

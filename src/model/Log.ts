@@ -5,7 +5,7 @@ export class Log {
    * @param createdAt when this log was created.
    */
   constructor(
-    readonly fields: object = {},
+    readonly fields: any = {},
     readonly relatedLogs: Log[] = [],
     readonly createdAt = new Date().toISOString()
   ) {}

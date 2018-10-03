@@ -4,6 +4,37 @@ import RobotUtil from "../util/RobotUtil";
 import PlatformUtil from "../util/PlatformUtil";
 import { promisify } from "util";
 
+const alias = (processName: string) => {
+    let name: string = "";
+    if (processName.toLowerCase().includes("openfin")) {
+        name += "OpenFin ";
+    }
+
+    if (processName.toLowerCase().includes("-startup-url")) {
+        name += "Startup ";
+    }
+
+    if (processName.toLowerCase().includes("--type=gpu-process")) {
+        name += "GPU ";
+
+        let stripToken = processName.substring(
+            processName.indexOf("--service-pipe-token=") +
+            "--service-pipe-token=".length
+        );
+        name += stripToken.substring(0, stripToken.indexOf(" ") + 1);
+    }
+
+    if (processName.toLowerCase().includes("--type=renderer")) {
+        name += "Render ";
+    }
+
+    if (processName.toLowerCase().includes("rvm")) {
+        name += "RVM";
+    }
+
+    return name.trim();
+};
+
 const benchmark: BenchmarkContext = {
   benchmarks: {
     windows: [
@@ -31,7 +62,7 @@ const benchmark: BenchmarkContext = {
   steps: [
     // Start logging memory
     async processName => {
-      MetricLoggerUtil.listenOnMemoryLogs(processName, "1s", "1h").catch(
+      MetricLoggerUtil.listenOnMemoryLogs(processName, "1s", "1h", alias).catch(
         console.log
       );
     },

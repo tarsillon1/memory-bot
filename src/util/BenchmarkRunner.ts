@@ -1,5 +1,5 @@
 import PlatformUtil from "./PlatformUtil";
-import {promisify} from "util";
+import { promisify } from "util";
 
 export class BenchmarkContext {
   benchmarks: {
