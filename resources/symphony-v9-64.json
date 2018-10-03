@@ -1,0 +1,51 @@
+{
+  "licenseKey": "64605fac-add3-48a0-8710-64b38e96a2dd",
+  "devtools_port": 9090,
+  "offlineAccess": true,
+  "splashScreenImage": "",
+  "startup_app": {
+    "description": "Beta Client for OpenFin Sym",
+    "autoShow": true,
+    "frame": true,
+    "minHeight": 625,
+    "defaultHeight": 625,
+    "defaultWidth": 800,
+    "minWidth": 625,
+    "saveWindowState": false,
+    "spellCheck": true,
+    "experimental": {
+      "api": {
+        "fileDownloadApi": true
+      }
+    },
+    "url": "https://openfin.symphony.com",
+    "uuid": "OpenFin-Sym-Client-Staging",
+    "name": "OpenFin-Sym-Client-Staging",
+    "icon": "https://raw.githubusercontent.com/symphonyoss/SymphonyElectron/master/build/icon.ico",
+    "preload": "https://cdn.openfin.co/demos/symphony-of-staging/bundle.js"
+  },
+  "runtime": {
+    "version": "9.61.34.25",
+    "fallbackVersion": "8.56.30.57",
+    "arguments": "--noerrdialogs --frameStrategy=frames --enable-aggressive-domstorage-flushing --winhttp-proxy-resolver"
+  },
+  "shortcut": {
+    "company": "OpenFin",
+    "description": "Client for OpenFin Sym",
+    "name": "Staging OpenFin Sym",
+    "target": [
+      "start-menu",
+      "desktop",
+      "automatic-start-up"
+    ],
+    "icon": "https://symphony.com/favicon.ico"
+  },
+  "appAssets": [
+    {
+      "version": "5.0.0",
+      "alias": "ScreenSnippet",
+      "target": "OF-ScreenSnippet/ScreenSnippet.exe",
+      "src": "https://cdn.openfin.co/demos/symphony-of-staging/OF-ScreenSnippet.zip"
+    }
+  ]
+}

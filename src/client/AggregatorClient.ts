@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
 import axios from "axios";
-import { MetricLog } from "../model/MetricLog";
+import { Log } from "../model/Log";
 
 export default class AggregatorClient {
   private readonly instance: AxiosInstance;
@@ -11,14 +11,18 @@ export default class AggregatorClient {
     });
   }
 
-  public async sendMetricLogs(metricLogs: MetricLog[]) {
+  /**
+   * Send metric logs to the aggregator.
+   * @param {Log[]} logs the logs to send.
+   */
+  public async sendLogs(logs: Log[]) {
     return this.instance
       .post(
         `/aggregator/collect?apiToken=${
           process.env.AGGREGATOR_API_TOKEN
-        }&schema=com.aggregator.metric.trigger&strict=true`,
+        }&schema=com.aggregator.log.trigger`,
         {
-          metricLogs
+          logs
         }
       )
       .catch(console.log);

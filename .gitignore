@@ -1,4 +1,5 @@
 .idea
 .env
+benchmark.json
 node_modules
 build

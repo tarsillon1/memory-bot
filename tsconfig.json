@@ -3,8 +3,7 @@
     "module": "commonjs",
     "outDir": "build",
     "target": "ES6",
-    "removeComments": true,
-    "experimentalDecorators": true
+    "removeComments": true
   },
   "include": [
     "./src/**/*.ts"
